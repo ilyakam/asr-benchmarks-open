@@ -1,0 +1,54 @@
+services:
+  benchmark-base:
+    image: asr-benchmarks-open:nemo
+    container_name: asr-benchmark-base
+    env_file:
+      - .env
+    volumes:
+      - ./cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: bash
+
+  # Service for running the Nemo benchmark
+  benchmark-nemo:
+    image: asr-benchmarks-open:nemo
+    container_name: asr-benchmark-nemo
+    env_file:
+      - .env
+    volumes:
+      - ./cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - BATCH_SIZE=128
+    command: sh -c "cd /src/nemo_asr && ./run_fast_conformer_rnnt.sh"
+
+  # Service for running the CTranslate2 benchmark
+  benchmark-ctranslate2:
+    image: asr-benchmarks-open:ctranslate2
+    container_name: asr-benchmark-ctranslate2
+    env_file:
+      - .env
+    volumes:
+      - ./cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - BATCH_SIZE=128
+    command: sh -c "cd /src/ctranslate2 && ./run_whisper.sh"

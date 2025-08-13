@@ -1,4 +1,88 @@
-# Open ASR Leaderboard
+# ASR Benchmarks - Open
+
+This repository is a fork of the [Open ASR Leaderboard repository](https://github.com/huggingface/open_asr_leaderboard) from Hugging Face. The idea is to contain the benchmarks in a Dockerized environment while caching the models and datasets in a separate volume on the host.
+
+## Prerequisites
+
+* System requirements:
+  * NVIDIA accelerator
+  * CUDA 12.3
+* System packages:
+  * Docker
+
+## Initialize
+
+1. Clone the repo
+    ```sh
+    git clone git@github.com:ilyakam/asr-benchmarks-open.git
+    ```
+
+1. Create a local folder for caching:
+    ```sh
+    mkdir -p cache
+    ```
+
+1. Create a `.env` file with the following content:
+    ```sh
+    HF_TOKEN=[REDACTED]
+    ```
+
+1. Build the Docker image for the desired library:
+    ```sh
+    export LIBRARY=[library] && docker build --build-arg LIBRARY=$LIBRARY -t asr-benchmarks-open:$LIBRARY .
+    ```
+
+## Benchmark
+
+- Run benchmarks for the desired library:
+    ```sh
+    docker compose run --rm benchmark-[library]
+    ```
+
+### Notes
+
+- The `base` library starts a shell in the container
+- Add `-e BATCH_SIZE=[batch size]` to override the default batch size of `128`:
+    ```sh
+    docker compose run --rm -e BATCH_SIZE=24 benchmark-[library]
+    ```
+- Add `-e MAX_EVAL_SAMPLES=[max eval samples]` to run a subset of samples:
+    ```sh
+    docker compose run --rm -e MAX_EVAL_SAMPLES=5 benchmark-[library]
+    ```
+
+### Examples
+
+- Rebuild and run `nemo` to benchmark `parakeet`:
+    ```sh
+    export LIBRARY=nemo && \
+    docker build --build-arg LIBRARY=$LIBRARY -t asr-benchmarks-open:$LIBRARY . && \
+    docker compose run --rm -e BATCH_SIZE=64 -e MAX_EVAL_SAMPLES=3 benchmark-nemo
+    ```
+- Rebuild and run `ctranslate2` to benchmark `faster-whisper`:
+    ```sh
+    export LIBRARY=ctranslate2 && \
+    docker build --build-arg LIBRARY=$LIBRARY -t asr-benchmarks-open:$LIBRARY . && \
+    docker compose run --rm -e BATCH_SIZE=24 -e MAX_EVAL_SAMPLES=5 benchmark-ctranslate2
+    ```
+
+## Libraries
+
+The following libraries were verified to be working:
+
+- [x] `base` (no library)
+- [x] `ctranslate2`
+- [ ] `granite`
+- [ ] `kyutai`
+- [ ] `moonshine`
+- [x] `nemo`
+- [ ] `phi`
+- [ ] `speechbrain`
+- [ ] `trtllm`
+
+---
+
+# Open ASR Leaderboard (Original)
 
 This repository contains the code for the Open ASR Leaderboard. The leaderboard is a Gradio Space that allows users to compare the accuracy of ASR models on a variety of datasets. The leaderboard is hosted at [hf-audio/open_asr_leaderboard](https://huggingface.co/spaces/hf-audio/open_asr_leaderboard).
 
