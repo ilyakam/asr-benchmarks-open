@@ -19,7 +19,7 @@ wer_metric = evaluate.load("wer")
 
 def main(args):
 
-    DATA_CACHE_DIR = os.path.join(os.getcwd(), "audio_cache")
+    DATA_CACHE_DIR = '/root/.cache/audio_cache'
     DATASET_NAME = args.dataset
     SPLIT_NAME = args.split
 
@@ -33,13 +33,13 @@ def main(args):
     else:
         device = torch.device("cpu")
         compute_dtype=torch.float32
-        
+
 
     if args.model_id.endswith(".nemo"):
         asr_model = ASRModel.restore_from(args.model_id, map_location=device)
     else:
         asr_model = ASRModel.from_pretrained(args.model_id, map_location=device)  # type: ASRModel
-    
+
     asr_model.to(compute_dtype)
     asr_model.eval()
 
@@ -80,7 +80,7 @@ def main(args):
             audio_paths.append(audio_path)
             durations.append(len(audio_array) / sample_rate)
 
-        
+
         batch["references"] = batch["norm_text"]
         batch["audio_filepaths"] = audio_paths
         batch["durations"] = durations
@@ -96,11 +96,11 @@ def main(args):
     if asr_model.cfg.decoding.strategy != "beam":
         asr_model.cfg.decoding.strategy = "greedy_batch"
         asr_model.change_decoding_strategy(asr_model.cfg.decoding)
-    
+
     # prepraing the offline dataset
     dataset = dataset.map(download_audio_files, batch_size=args.batch_size, batched=True, remove_columns=["audio"])
 
-    # Write manifest from daraset batch using json and keys audio_filepath, duration, text
+    # Write manifest from dataset batch using json and keys audio_filepath, duration, text
 
     all_data = {
         "audio_filepaths": [],
@@ -112,14 +112,14 @@ def main(args):
     for data in tqdm(data_itr, desc="Downloading Samples"):
         for key in all_data:
             all_data[key].append(data[key])
-    
+
     # Sort audio_filepaths and references based on durations values
     sorted_indices = sorted(range(len(all_data["durations"])), key=lambda k: all_data["durations"][k], reverse=True)
     all_data["audio_filepaths"] = [all_data["audio_filepaths"][i] for i in sorted_indices]
     all_data["references"] = [all_data["references"][i] for i in sorted_indices]
     all_data["durations"] = [all_data["durations"][i] for i in sorted_indices]
-    
-    
+
+
     total_time = 0
     for _ in range(2): # warmup once and calculate rtf
         if _ == 0:

@@ -132,3 +132,6 @@ dmypy.json
 */pretrained_models/*
 */model_checkpoints/*
 */results/*
+
+# Cached audio files, datasets, models, etc.
+cache/
